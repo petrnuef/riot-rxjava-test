@@ -1,7 +1,7 @@
 package fi.uef.cs.petrn.riot_rxjava_test;
 
 
-import android.os.SystemClock;
+
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.SearchView;
@@ -122,10 +122,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateTheUserInterface(String i) {
-        TextView v = (TextView) findViewById(R.id.resultView);
-        String jsonData = i;
+
+
         try {
-            JSONObject object = new JSONObject(jsonData);
+            JSONObject object = new JSONObject(i);
             JSONObject o = (JSONObject) object.get("heihermanni");
             name.setText(o.get("name").toString());
             lvl.setText(o.get("summonerLevel").toString());
