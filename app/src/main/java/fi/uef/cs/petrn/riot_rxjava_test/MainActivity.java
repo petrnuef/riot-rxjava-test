@@ -4,8 +4,9 @@ package fi.uef.cs.petrn.riot_rxjava_test;
 import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.widget.SearchView;
 import android.util.Log;
-import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.squareup.okhttp.OkHttpClient;
@@ -16,6 +17,9 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -24,20 +28,39 @@ import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
-    private String apiKey = "RGAPI-c31971df-9fc5-457e-a45a-22cd5be9903e";
+    @BindView(R.id.first) Button firstButton;
+    @BindView(R.id.second) Button secondButton;
+    @BindView(R.id.third) Button thirdButton;
+    @BindView(R.id.resultLvl) TextView lvl;
+    @BindView(R.id.resultName) TextView name;
+    @BindView(R.id.resultView) TextView resultView;
+    //@BindView(R.id.searchView) SearchView searchView;
+
+    @OnClick(R.id.first) void submit() {
+        firstButton.setEnabled(false);
+        Disposable subscribe = dataFromRiot
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(string -> {
+                    updateTheUserInterface(string);
+                    firstButton.setEnabled(true); //
+                });
+        disposable.add(subscribe);
+    }
+
+
+
+    private String apiKey = "RGAPI-c31971df-9fc5-457e-a45a-22cd5be9903e"; //Developer key
 
     private String TAG = "MainActivity";
 
     OkHttpClient client = new OkHttpClient();
 
-    final Observable<Integer> serverDownloadObservable = Observable.create(emitter -> {
-        SystemClock.sleep(10000); // simulate delay
-        emitter.onNext(5);
-        emitter.onComplete();
-    });
+
 
     final Observable<String> dataFromRiot = Observable.create(emitter ->  {
-        String url = "https://euw.api.pvp.net/api/lol/euw/v1.4/summoner/by-name/heihermanni?api_key=" + apiKey;
+        String username = "heihermanni";
+        String url = "https://euw.api.pvp.net/api/lol/euw/v1.4/summoner/by-name/" + username + "?api_key=" + apiKey;
         Log.i(TAG, "kutsutaan " + url);
         emitter.onNext(run(url));
         emitter.onComplete();
@@ -59,19 +82,43 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
 
-        View view = findViewById(R.id.first);
-        view.setOnClickListener(v-> {
-            view.setEnabled(false);
+        SearchView searchView = (SearchView) findViewById(R.id.searchView);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String s) {
+                firstButton.setEnabled(false);
+                Disposable subscribe = dataFromRiot
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(data -> {
+                            updateTheUserInterface(data);
+                            firstButton.setEnabled(true); //
+                        });
+                disposable.add(subscribe);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String s) {
+                return false;
+            }
+        });
+
+    /*
+        firstButton.setOnClickListener(v-> {
+            firstButton.setEnabled(false);
             Disposable subscribe = dataFromRiot
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
                     .subscribe(string -> {
                         updateTheUserInterface(string);
-                        v.setEnabled(true); //
+                        firstButton.setEnabled(true); //
                     });
             disposable.add(subscribe);
         });
+        */
     }
 
     private void updateTheUserInterface(String i) {
@@ -80,11 +127,13 @@ public class MainActivity extends AppCompatActivity {
         try {
             JSONObject object = new JSONObject(jsonData);
             JSONObject o = (JSONObject) object.get("heihermanni");
+            name.setText(o.get("name").toString());
+            lvl.setText(o.get("summonerLevel").toString());
             Log.i(TAG, o.toString());
         } catch(Exception e) {
             Log.i(TAG, "error: " + e);
         }
 
-        v.setText(i);
+        //resultView.setText(i);
     }
 }
