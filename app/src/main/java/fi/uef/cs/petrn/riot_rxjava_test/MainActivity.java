@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.resultLvl) TextView lvl;
     @BindView(R.id.resultName) TextView name;
     @BindView(R.id.resultView) TextView resultView;
-    //@BindView(R.id.searchView) SearchView searchView;
+    @BindView(R.id.searchView) SearchView searchView;
 
     @OnClick(R.id.first) void submit() {
         firstButton.setEnabled(false);
@@ -54,17 +54,27 @@ public class MainActivity extends AppCompatActivity {
 
     private String TAG = "MainActivity";
 
+    private String username = "heihermanni";
+    private String id = "0";
+
     OkHttpClient client = new OkHttpClient();
 
 
 
     final Observable<String> dataFromRiot = Observable.create(emitter ->  {
-        String username = "heihermanni";
+        //String username = "heihermanni";
         String url = "https://euw.api.pvp.net/api/lol/euw/v1.4/summoner/by-name/" + username + "?api_key=" + apiKey;
         Log.i(TAG, "kutsutaan " + url);
         emitter.onNext(run(url));
         emitter.onComplete();
 
+    });
+
+    final Observable<String> matchData = Observable.create(emitter -> {
+        String url = "https://euw.api.pvp.net/api/lol/euw/v2.2/matchlist/by-summoner/" + id + "?api_key=" + apiKey;
+        Log.i(TAG, "kutsutaan " + url);
+        emitter.onNext(run(url));
+        emitter.onComplete();
     });
 
     String run(String url) throws IOException {
@@ -84,10 +94,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        SearchView searchView = (SearchView) findViewById(R.id.searchView);
+        //SearchView searchView = (SearchView) findViewById(R.id.searchView);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String s) {
+                username = s;
                 firstButton.setEnabled(false);
                 Disposable subscribe = dataFromRiot
                         .observeOn(AndroidSchedulers.mainThread())
@@ -126,14 +137,27 @@ public class MainActivity extends AppCompatActivity {
 
         try {
             JSONObject object = new JSONObject(i);
-            JSONObject o = (JSONObject) object.get("heihermanni");
+            JSONObject o = (JSONObject) object.get(username.toLowerCase());
             name.setText(o.get("name").toString());
             lvl.setText(o.get("summonerLevel").toString());
+            id = o.get("id").toString();
             Log.i(TAG, o.toString());
+            Disposable subscribe = matchData
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(string -> {
+                        updateMatchList(string);
+
+                    });
+            disposable.add(subscribe);
         } catch(Exception e) {
             Log.i(TAG, "error: " + e);
         }
 
         //resultView.setText(i);
+    }
+
+    private void updateMatchList(String i) {
+        Log.i(TAG, i);
     }
 }

@@ -1,0 +1,10 @@
+# Change log
+
+
+## 2017-05-06
+### Added
+- Get data from Riots API by username
+
+## 2017-05-05
+### Added
+- Http call to Riots API
