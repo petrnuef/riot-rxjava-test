@@ -8,6 +8,7 @@ import android.widget.SearchView;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -28,25 +29,13 @@ import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
-    @BindView(R.id.first) Button firstButton;
-    @BindView(R.id.second) Button secondButton;
-    @BindView(R.id.third) Button thirdButton;
+
     @BindView(R.id.resultLvl) TextView lvl;
     @BindView(R.id.resultName) TextView name;
-    @BindView(R.id.resultView) TextView resultView;
     @BindView(R.id.searchView) SearchView searchView;
 
-    @OnClick(R.id.first) void submit() {
-        firstButton.setEnabled(false);
-        Disposable subscribe = dataFromRiot
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(string -> {
-                    updateTheUserInterface(string);
-                    firstButton.setEnabled(true); //
-                });
-        disposable.add(subscribe);
-    }
+
+
 
 
 
@@ -77,13 +66,19 @@ public class MainActivity extends AppCompatActivity {
         emitter.onComplete();
     });
 
-    String run(String url) throws IOException {
+    String run(String url) {
         Request req = new Request.Builder()
                 .url(url)
                 .build();
+        try {
+            Response r = client.newCall(req).execute();
+            return r.body().string().toString();
+        } catch(Exception e) {
+            Log.i(TAG, "error while loading data: " + e.toString());
+            return "Error";
+        }
 
-        Response r = client.newCall(req).execute();
-        return r.body().string().toString();
+
     }
 
     CompositeDisposable disposable = new CompositeDisposable();
@@ -93,19 +88,27 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+        Disposable subscribe = dataFromRiot
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(data -> {
+                    updateTheUserInterface(data);
+
+                });
+        disposable.add(subscribe);
 
         //SearchView searchView = (SearchView) findViewById(R.id.searchView);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String s) {
                 username = s;
-                firstButton.setEnabled(false);
+
                 Disposable subscribe = dataFromRiot
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.io())
                         .subscribe(data -> {
                             updateTheUserInterface(data);
-                            firstButton.setEnabled(true); //
+
                         });
                 disposable.add(subscribe);
                 return false;
@@ -133,25 +136,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateTheUserInterface(String i) {
+        if(i == "Error") {
+            Log.i(TAG, "Error päivityksessä");
+            Toast t = Toast.makeText(getApplicationContext(), "Error while loading data", Toast.LENGTH_SHORT);
+            t.show();
+        } else {
+            try {
+                JSONObject object = new JSONObject(i);
+                JSONObject o = (JSONObject) object.get(username.toLowerCase());
+                name.setText(o.get("name").toString());
+                lvl.setText(o.get("summonerLevel").toString());
+                id = o.get("id").toString();
+                Log.i(TAG, o.toString());
+                Disposable subscribe = matchData
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(string -> {
+                            updateMatchList(string);
 
-
-        try {
-            JSONObject object = new JSONObject(i);
-            JSONObject o = (JSONObject) object.get(username.toLowerCase());
-            name.setText(o.get("name").toString());
-            lvl.setText(o.get("summonerLevel").toString());
-            id = o.get("id").toString();
-            Log.i(TAG, o.toString());
-            Disposable subscribe = matchData
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(string -> {
-                        updateMatchList(string);
-
-                    });
-            disposable.add(subscribe);
-        } catch(Exception e) {
-            Log.i(TAG, "error: " + e);
+                        });
+                disposable.add(subscribe);
+            } catch (Exception e) {
+                Log.i(TAG, "error: " + e);
+            }
         }
 
         //resultView.setText(i);

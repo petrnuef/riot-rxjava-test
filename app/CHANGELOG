@@ -1,5 +1,11 @@
 # Change log
 
+## 2017-06-08
+### Fixed
+- UI: Removed some irrelevant components and made placeholder layout for matchdata
+- Data: Calls Riot API at onCreate()
+- Network error should not crash app
+
 
 ## 2017-05-06
 ### Added
