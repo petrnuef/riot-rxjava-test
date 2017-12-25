@@ -1,3 +1,6 @@
 <resources>
-    <string name="app_name">Riot-rxjava-test</string>
+    <string name="app_name">lolstats</string>
+    <string name="data">Data</string>
+    <string name="matches">Last matches</string>
+    <string name="current">Current game</string>
 </resources>

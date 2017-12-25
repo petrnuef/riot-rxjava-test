@@ -24,6 +24,9 @@ public class Summoner {
     @Expose
     private long summonerLevel;
 
+
+
+
     public long getId() {
         return id;
     }

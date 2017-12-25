@@ -23,7 +23,7 @@ public interface RiotInterface {
 
     @GET("/lol/match/v3/matchlists/by-account/{accountId}")
     Call<MatchData> listMatches(
-            @Path("accountId") int accountId,
+            @Path("accountId") long accountId,
             @Query("api_key") String api_key
             );
 }
