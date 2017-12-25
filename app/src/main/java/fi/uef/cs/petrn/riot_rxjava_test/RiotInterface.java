@@ -1,7 +1,7 @@
 package fi.uef.cs.petrn.riot_rxjava_test;
 
 
-import java.util.ArrayList;
+
 
 
 import retrofit2.Call;
@@ -18,6 +18,12 @@ public interface RiotInterface {
     @GET("/lol/summoner/v3/summoners/by-name/{summonerName}")
     Call<Summoner> listSummoners(
             @Path("summonerName") String summonerName,
+            @Query("api_key") String api_key
+            );
+
+    @GET("/lol/match/v3/matchlists/by-account/{accountId}")
+    Call<MatchData> listMatches(
+            @Path("accountId") int accountId,
             @Query("api_key") String api_key
             );
 }

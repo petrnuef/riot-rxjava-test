@@ -1,5 +1,10 @@
 # Change log
 
+## 2017-12-25
+### Added and removed
+-Added: Retrofit
+-Removed: RxJava
+
 ## 2017-06-08
 ### Fixed
 - UI: Removed some irrelevant components and made placeholder layout for matchdata
